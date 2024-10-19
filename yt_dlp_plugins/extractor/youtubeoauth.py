@@ -118,53 +118,56 @@ class YouTubeOAuth2Handler(InfoExtractor):
         }
 
     def authorize(self):
-        code_response = self._download_json(
-            'https://www.youtube.com/o/oauth2/device/code',
-            video_id='oauth2',
-            note='Initializing OAuth2 Authorization Flow',
-            data=json.dumps({
-                'client_id': _CLIENT_ID,
-                'scope': _SCOPES,
-                'device_id': uuid.uuid4().hex,
-                'device_model': 'ytlr::'
-            }).encode(),
-            headers={'Content-Type': 'application/json', '__youtube_oauth__': True})
-
-        verification_url = code_response['verification_url']
-        user_code = code_response['user_code']
-        self.to_screen(f'para darle acceso a yt-dlp ve a  {verification_url}  and enter code  {user_code}')
-
-        while True:
-            token_response = self._download_json(
-                'https://www.youtube.com/o/oauth2/token',
-                video_id='oauth2',
-                note=False,
-                data=json.dumps({
-                    'client_id': _CLIENT_ID,
-                    'client_secret': _CLIENT_SECRET,
-                    'code': code_response['device_code'],
-                    'grant_type': 'http://oauth.net/grant_type/device/1.0'
-                }).encode(),
-                headers={'Content-Type': 'application/json', '__youtube_oauth__': True})
-
-            error = traverse_obj(token_response, 'error')
-            if error:
-                if error == 'authorization_pending':
-                    time.sleep(code_response['interval'])
-                    continue
-                elif error == 'expired_token':
-                    self.report_warning('The device code has expired, restarting authorization flow')
-                    return self.authorize()
-                else:
-                    raise ExtractorError(f'Unhandled OAuth2 Error: {error}')
-
-            self.to_screen('Authorization successful')
-            return {
-                'access_token': token_response['access_token'],
-                'expires': datetime.datetime.now(datetime.timezone.utc).timestamp() + token_response['expires_in'],
-                'refresh_token': token_response['refresh_token'],
-                'token_type': token_response['token_type']
-            }
+        with open(f'{Path.home()}/.store/token.json', "r", encoding="utf-8") as json_file:
+            data = json.load(json_file)
+        return data
+        # code_response = self._download_json(
+        #     'https://www.youtube.com/o/oauth2/device/code',
+        #     video_id='oauth2',
+        #     note='Initializing OAuth2 Authorization Flow',
+        #     data=json.dumps({
+        #         'client_id': _CLIENT_ID,
+        #         'scope': _SCOPES,
+        #         'device_id': uuid.uuid4().hex,
+        #         'device_model': 'ytlr::'
+        #     }).encode(),
+        #     headers={'Content-Type': 'application/json', '__youtube_oauth__': True})
+        #
+        # verification_url = code_response['verification_url']
+        # user_code = code_response['user_code']
+        # self.to_screen(f'para darle acceso a yt-dlp ve a  {verification_url}  and enter code  {user_code}')
+        #
+        # while True:
+        #     token_response = self._download_json(
+        #         'https://www.youtube.com/o/oauth2/token',
+        #         video_id='oauth2',
+        #         note=False,
+        #         data=json.dumps({
+        #             'client_id': _CLIENT_ID,
+        #             'client_secret': _CLIENT_SECRET,
+        #             'code': code_response['device_code'],
+        #             'grant_type': 'http://oauth.net/grant_type/device/1.0'
+        #         }).encode(),
+        #         headers={'Content-Type': 'application/json', '__youtube_oauth__': True})
+        #
+        #     error = traverse_obj(token_response, 'error')
+        #     if error:
+        #         if error == 'authorization_pending':
+        #             time.sleep(code_response['interval'])
+        #             continue
+        #         elif error == 'expired_token':
+        #             self.report_warning('The device code has expired, restarting authorization flow')
+        #             return self.authorize()
+        #         else:
+        #             raise ExtractorError(f'Unhandled OAuth2 Error: {error}')
+        #
+        #     self.to_screen('Authorization successful')
+        #     return {
+        #         'access_token': token_response['access_token'],
+        #         'expires': datetime.datetime.now(datetime.timezone.utc).timestamp() + token_response['expires_in'],
+        #         'refresh_token': token_response['refresh_token'],
+        #         'token_type': token_response['token_type']
+        #     }
 
 
 for _, ie in YOUTUBE_IES:
