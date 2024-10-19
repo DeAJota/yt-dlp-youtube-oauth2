@@ -45,6 +45,7 @@ class YouTubeOAuth2Handler(InfoExtractor):
             with open(f'{Path.home()}/.store/token.json', "r", encoding="utf-8") as json_file:
                 data = json.load(json_file)
                 self.cache.store('youtube-oauth2', 'token_data', data)
+                self._TOKEN_DATA = data
         return self._TOKEN_DATA
 
     def validate_token_data(self, token_data):
