@@ -54,7 +54,10 @@ class YouTubeOAuth2Handler(InfoExtractor):
     def initialize_oauth(self):
         print('entra en initialize')
         token_data = self.get_token()
-        print('token: ' + token_data)
+        print(token_data)
+        print(token_data['expires'])
+        print('ha expirado')
+        print(token_data['expires'] < datetime.datetime.now(datetime.timezone.utc).timestamp() + 60)
         if token_data and not self.validate_token_data(token_data):
             self.report_warning('Invalid cached OAuth2 token data')
             token_data = None
